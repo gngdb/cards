@@ -1,0 +1,243 @@
+\documentclass[grid,avery5371]{flashcards}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{ebgaramond}
+\usepackage{amsmath}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\usepackage{hyperref}
+% \hypersetup{
+%     colorlinks=true,
+%     linkcolor=blue,
+%     filecolor=magenta,      
+%     urlcolor=black,
+%     }
+% \usepackage{verse}
+% \settowidth{\versewidth}{It lies behind stars and under hills,}
+% \addtolength{\versewidth}{2em}
+
+\geometry{headheight=12pt,footskip=4pt}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\chead{\small Educational notes for deep learning tricks not often formally taught.}
+
+\title{Dark Arts of Deep Learning}
+\author{Gavia Gray}
+
+\cardbackstyle[\LARGE\bfseries]{plain}
+\cardfrontstyle[\large]{plain}
+% \cardfrontstyle{plain}
+% \cardbackfoot{Functional Analysis}
+
+
+\newcommand{\cb}[1]{#1 \\ {\small \url{https://github.com/gngdb/cards}}}
+
+\begin{document}
+
+
+
+\begin{flashcard}[Karpathy]{%
+Training on one minibatch should always overfit, if the network
+still fails to minimize training loss then there is a serious bug
+somewhere.
+\footnote{\small \url{https://nitter.net/karpathy/status/1013244313327681536}}
+}
+\cb{Start with one minibatch}
+\end{flashcard}
+
+% \footnote{\url{https://karpathy.github.io/2019/04/25/recipe/}}
+
+\begin{flashcard}[Sylvain Gugger]{%
+The \url{fast.ai} learning rate finder trick often works:
+increase the learning rate over a logspace every minibatch,
+train from scratch and find the point
+halfway down the slope of descent.
+\footnote{\small \url{https://arxiv.org/abs/1506.01186}}
+\footnote{\small \url{https://sgugger.github.io/how-do-you-find-a-good-learning-rate.html}}
+}
+\cb{lr\_finder}
+\end{flashcard}
+
+\begin{flashcard}[Karpathy]{%
+If you want to prove two things in a deep neural network are connected,
+computer the gradient (by backprop or finite differences) 
+of one with respect to the other. If it's nonzero,
+they must be connected, but if it's zero they might still be connected.\footnote{\small \url{https://karpathy.github.io/2019/04/25/recipe/}}}
+\cb{Nonzero gradients prove connectedness}
+\end{flashcard}
+
+\begin{flashcard}[cs231n]{%
+Problems due to backpropagation failures can be debugged using finite
+differences, but remember to use the centered difference version\footnote{\small \url{https://cs231n.github.io/neural-networks-3/\#gradcheck}}:
+ $$
+ \frac{df(x)}{dx} = \frac{f(x+h) - f(x-h)}{2h}
+ $$
+}
+\cb{Finite differences}
+\end{flashcard}
+
+\begin{flashcard}[alexirpan]{%
+Batch norm introduces two dangerous things to your computational graph:
+additional state and dependence between datapoints.
+\footnote{\small \url{https://www.alexirpan.com/2017/04/26/perils-batch-norm.html}}
+}
+\cb{Batch norm is the problem}
+\end{flashcard}
+
+\begin{flashcard}[einops]{%
+Many problems in deep learning code happen because juggling
+tensor dimensions is confusing. The programmer has to keep a mental
+model of which dimension is which when permuting or reshaping.
+Einsum and einops
+\footnote{\small \url{https://einops.rocks/}}
+are the best solution so far.
+Named tensors may one day also help.
+\footnote{\small \url{https://nlp.seas.harvard.edu/NamedTensor}}
+}
+\cb{Transposes are the problem}
+\end{flashcard}
+
+\begin{flashcard}[srush]{%
+Broadcasting or just ``casting'': combining two tensors
+with the same number of dimensions, any dimensions of size 1 will
+get repeated over the other tensor's dimension.
+\footnote{\small \url{https://github.com/srush/Tensor-Puzzles}}
+}
+\cb{No one knows how to broadcast}
+\end{flashcard}
+
+\begin{flashcard}[davidcpage]{%
+The number of ways to improve a network by adding things is overwhelming.
+Removing things that aren't required is often more useful.
+\footnote{\small \url{https://myrtle.ai/learn/how-to-train-your-resnet-4-architecture/}}
+}
+\cb{Ablation}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+Random search explores high dimensional spaces much faster than grid search.
+Thanks to simplicity and lack of bias it will also often work better than
+sophisticated methods as well. 
+\footnote{\small \url{https://jmlr.org/papers/v13/bergstra12a.html}}
+Hyperband accelerates random search by not
+running a full training run every time.
+\footnote{\small \url{https://jmlr.org/beta/papers/v18/16-558.html}}
+}
+\cb{Random search is faster}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+Warmup is increasing the learning rate to the required value at the start
+of training to improve stability.
+\footnote{\small \url{https://jdhao.github.io/2020/08/14/warmup_maskrcnn_how_does_it_work/}}
+This can also be useful if your checkpoint fails to store the
+complete state on restarts.
+\footnote{\small \sloppy \url{https://tanelp.github.io/posts/a-bug-that-plagues-thousands-of-open-source-ml-projects/}}
+}
+\cb{Warmup}
+\end{flashcard}
+
+\begin{flashcard}[Lucas]{%
+Mean squared error gradient tends to zero near the target.
+\footnote{\small \sloppy \url{https://www.cs.toronto.edu/~mren/teach/csc411_19s/lec/lec08_notes.pdf}}
+If observation noise isn't tuned this will exacerbate problems
+like posterior collapse in VAEs\footnote{\small \url{https://arxiv.org/abs/1911.02469}}.
+This is why VAEs often use BCE/CE on data that isn't Bernoulli distributed.
+}
+\cb{Mean Squared Error Gradient Vanishes}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+There is a FLOP counter hidden in 
+pytorch/tnt\footnote{\small \url{https://pytorch.org/tnt/stable/utils/utils.html\#flops-utils}}
+that isn't well known.
+None of the existing methods (including this one) are reliable (but this one
+is better than most).
+}
+\cb{Counting FLOPs is hard}
+\end{flashcard}
+
+\begin{flashcard}[distill]{%
+Momentum in SGD or adaptive gradient methods is used everywhere but no
+one understands it\footnote{\small \url{https://distill.pub/2017/momentum/}}.
+}
+\cb{No one understands momentum}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+$\mu$P might mean you can pick one set of hyperparameters and use them
+at various model scales. Uptake (at time of writing) is 
+variable.\footnote{\small \url{https://github.com/microsoft/mup}}
+}
+\cb{$\mu$P might scale hyperparameters}
+\end{flashcard}
+
+% this one is kinda obvious
+\begin{flashcard}[xavier]{%
+Activation norms say if the initialization is resulting
+in approximately zero mean unit standard 
+deviation activations\footnote{\small \url{https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf}}\footnote{\small \sloppy \url{https://github.com/fastai/fastbook/blob/master/13_convolutions.ipynb}}\footnote{\small \url{https://arxiv.org/abs/2101.08692}}.
+}
+\cb{Activation statistics}
+\end{flashcard}
+
+\begin{flashcard}[joel]{%
+Comparing architectures in terms of FLOPs spent w.r.t. performance
+at different scales is a scaling law. Tracking approximate FLOPs
+as another metric logged in tensorboard or wandb makes it easy to reproduce
+scaling law figures\footnote{\small \url{https://arxiv.org/abs/2001.08361}}.
+}
+\cb{Scaling laws are a better comparison than benchmarks}
+\end{flashcard}
+
+
+\begin{flashcard}[???]{%
+If the learning rate is tuned, gradient noise scale says, ``if the batch 
+size is below the gradient noise scale training will accelerate linearly
+with batch size''.
+\footnote{\small \url{https://github.com/CerebrasResearch/nanoGNS}}
+\emph{Author's note: this is from my work, sorry.}
+}
+\cb{GNS tells you when to increase your batch size}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+Most improvements are the result of empirical tests so the rate at which
+those tests can be run limits the speed deep learning models can 
+improve\footnote{\small \url{https://github.com/davidcpage/cifar10-fast}} \footnote{\small \url{https://github.com/tysam-code/hlb-gpt}}.
+}
+\cb{Improvement speed is limited by experiment rate}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+Gradient norms per-layer or otherwise grouped say
+a lot about how the network is 
+learning\footnote{\small \url{https://arxiv.org/abs/1702.08591}}
+\footnote{\small \url{https://matpalm.com/blog/viz_gradient_norms/}}
+\footnote{\small \sloppy \url{https://blog.christianperone.com/2019/08/listening-to-the-neural-network-gradient-norms-during-training/}}.
+Clipping gradients by norm or otherwise can save some
+unstable networks.
+}
+\cb{Gradient norms}
+\end{flashcard}
+
+\begin{flashcard}[???]{%
+Derivations in deep learning can be checked numerically, often
+by Monte Carlo. Doing this, for example in Jupyter notebooks (also support LaTeX),
+eliminates many mistakes\footnote{\small \emph{conversation with other researchers}}.
+}
+\cb{Numerically check maths}
+\end{flashcard}
+
+
+% \begin{flashcard}[???]{%
+% $
+% $
+% $}
+% $
+% \end{flashcard}
+
+
+\end{document}
